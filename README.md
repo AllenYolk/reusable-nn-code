@@ -6,7 +6,7 @@ The Python package `reunn` contains **REU**sable code for defining, training and
 
 ### Install from Source Code
 
-From [Github](https://github.com/AllenYolk/reusable-nn-code):
+From [GitHub](https://github.com/AllenYolk/reusable-nn-code):
 ```shell
 git clone https://github.com/AllenYolk/reusable-nn-code.git
 cd reusable-nn-code

@@ -14,5 +14,5 @@ pip install .
 ```
 
 ## TODO:
-* [ ] Add `setup.py` and write the installation guide.
-* [x] Implement `TaskPipeline`. Use the "Bridge" design pattern here.
+* [x] Add `setup.py` and write the installation guide.
+* [ ] Implement `TaskPipeline`. Use the "Bridge" design pattern here.

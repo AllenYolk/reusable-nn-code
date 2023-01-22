@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, Tuple
 
 import torch
 import torch.nn as nn
@@ -17,24 +17,26 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         optimizer: Optional[optim.Optimizer] = None,
         train_loader: Optional[data.DataLoader] = None, 
         test_loader: Optional[data.DataLoader] = None,
-        validate_loader: Optional[data.DataLoader] = None,
+        validation_loader: Optional[data.DataLoader] = None,
     ):
         super().__init__()
         self.net = net
         self.train_loader = train_loader
         self.test_loader = test_loader
-        self.validate_loader = validate_loader
+        self.validation_loader = validation_loader
         self.optimizer = optimizer
         self.criterion = criterion
 
     @staticmethod
-    def acc_cnt(pred, labels):
+    def acc_cnt(pred, labels) -> int:
         if pred.shape == labels.shape:
             labels = labels.argmax(dim=1)
         return (pred.argmax(dim=1) == labels).sum().item()
 
     def train_step(self, validation: bool = False, compute_acc: bool = False):
-        train_loss, train_acc, train_sample_cnt = 0.0, 0, 0
+        train_loss, train_acc, train_sample_cnt = 0.0, None, 0
+        if compute_acc:
+            train_acc = 0
 
         self.net.train()
         for data, labels in tqdm(self.train_loader):
@@ -51,16 +53,19 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
                 train_acc += self.acc_cnt(pred, labels)
 
         train_loss /= train_sample_cnt
-        print("train loss", train_loss)
         if compute_acc:
             train_acc /= train_sample_cnt
-            print("train acc", train_acc)
 
+        validation_loss, validation_acc = None, None
         if validation:
-            self.validate_step(compute_acc)
+            validation_loss, validation_acc = self.validation_step(compute_acc)
+
+        return train_loss, train_acc, validation_loss, validation_acc
 
     def _tv_step(self, data_loader: data.DataLoader, compute_acc: bool = False):
-        accumulate_loss, accumulate_acc, accumulate_sample_cnt = 0.0, 0, 0
+        accumulate_loss, accumulate_acc, accumulate_sample_cnt = 0.0, None, 0
+        if compute_acc:
+            accumulate_acc = 0
 
         self.net.eval()
         with torch.no_grad():
@@ -74,13 +79,30 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
                     accumulate_acc += self.acc_cnt(pred, labels)
 
         accumulate_loss /= accumulate_sample_cnt
-        print(accumulate_loss)
         if compute_acc:
             accumulate_acc /= accumulate_sample_cnt
-            print(accumulate_acc)
+
+        return accumulate_loss, accumulate_acc
 
     def test_step(self, compute_acc: bool = False):
-        self._tv_step(self.test_loader, compute_acc)
+        return self._tv_step(self.test_loader, compute_acc)
 
-    def validate_step(self, compute_acc: bool = False):
-        self._tv_step(self.validate_loader, compute_acc)
+    def validation_step(self, compute_acc: bool = False):
+        return self._tv_step(self.validation_loader, compute_acc)
+
+    def save_pipeline_state(
+        self, dir: str, validation_acc: Optional[float] = None,
+        trained_epoch: Optional[int] = None,
+    ):
+        chk = {"state_dict": self.net.state_dict()}
+        if validation_acc is not None:
+            chk["validation_acc"] = validation_acc
+        if trained_epoch is not None:
+            chk["trained_epoch"] = trained_epoch
+        torch.save(chk, dir)
+
+    def load_pipeline_state(self, dir: str):
+        chk = torch.load(dir)
+        if "state_dict" in chk:
+            self.net.load_state_dict(chk["state_dict"])
+        return chk

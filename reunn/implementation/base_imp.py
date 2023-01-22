@@ -20,5 +20,13 @@ class BasePipelineImp(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def validate_step(self, *args, **kwargs):
+    def validation_step(self, *args, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def save_pipeline_state(self, dir: str):
+        pass
+
+    @abc.abstractmethod
+    def load_pipeline_state(self, dir: str):
         pass

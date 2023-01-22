@@ -18,6 +18,13 @@ class TaskPipeline(abc.ABC):
     def test(self, *args, **kwargs):
         pass
 
+    def load_pipeline_state(self, dir: str):
+        chk = self.imp.load_pipeline_state(dir)
+        for k, v in chk.items():
+            if k in ["state_dict"]:
+                continue
+            print(f"{k}={v}")
+
 
 class SupervisedTaskPipeline(TaskPipeline):
 

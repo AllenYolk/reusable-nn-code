@@ -13,7 +13,7 @@ from reunn.implementation import base_imp
 class TorchPipelineImp(base_imp.BasePipelineImp):
 
     def __init__(
-        self, net: nn.Module,
+        self, net: nn.Module, log_dir: str,
         criterion: Optional[Callable] = None,
         optimizer: Optional[optim.Optimizer] = None,
         train_loader: Optional[data.DataLoader] = None, 
@@ -22,11 +22,13 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
     ):
         super().__init__()
         self.net = net
+        self.log_dir = log_dir
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.validation_loader = validation_loader
         self.optimizer = optimizer
         self.criterion = criterion
+        self.writer = None
 
     @staticmethod
     def acc_cnt(pred, labels) -> int:
@@ -110,3 +112,13 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         if "state_dict" in chk:
             self.net.load_state_dict(chk["state_dict"])
         return chk
+
+    def add_runtime_records(self, main_tag, kv, idx):
+        if self.writer is None:
+            self.writer = tensorboard.SummaryWriter(self.log_dir)
+        self.writer.add_scalars(main_tag, kv, idx)
+
+    def clear_runtime_records(self):
+        if self.writer is not None:
+            self.writer.close()
+            self.writer = None

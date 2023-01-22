@@ -32,5 +32,9 @@ class BasePipelineImp(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def add_runtime_records(self, main_tag, kv, step):
+    def add_runtime_records(self, main_tag, kv, idx):
+        pass
+
+    @abc.abstractmethod
+    def clear_runtime_records(self):
         pass

@@ -29,13 +29,19 @@ class TaskPipeline(abc.ABC):
             print(f"{k}={v}")
         return chk
 
+    def add_runtime_records(self, main_tag, kv, idx):
+        self.imp.add_runtime_records(main_tag, kv, idx)
+
+    def clear_runtime_records(self):
+        self.imp.clear_runtime_records()
+
 
 class SupervisedTaskPipeline(TaskPipeline):
 
     def __init__(self, net, log_dir: str, backend: str = "torch", **kwargs):
         if backend == "torch":
             from reunn.implementation import torch_imp
-            imp = torch_imp.TorchPipelineImp(net=net, **kwargs)
+            imp = torch_imp.TorchPipelineImp(net=net, log_dir=log_dir, **kwargs)
         else:
             raise ValueError(f"{backend} backend not supported!")
 
@@ -44,6 +50,7 @@ class SupervisedTaskPipeline(TaskPipeline):
     def train(
         self, epochs: int, validation: bool = False,
         rec_best_checkpoint: bool = False, rec_latest_checkpoint: bool = False,
+        rec_runtime_msg: bool = False,
     ):
         min_loss = float("inf")
         for epoch in range(epochs):
@@ -57,11 +64,17 @@ class SupervisedTaskPipeline(TaskPipeline):
             else:
                 print(f"epoch {epoch}: train_loss={train_loss}")
 
+            if rec_runtime_msg:
+                kv = {"train_loss": train_loss}
+                if validation:
+                    kv["validation_loss"] = validation_loss
+                self.add_runtime_records(main_tag="loss", kv=kv, idx=epoch)
+
             if validation_loss < min_loss:
                 min_loss = validation_loss
                 if rec_best_checkpoint:
                     self.imp.save_pipeline_state(
-                        dir=os.path.join(self.dir, "best_checkpoint.pt"), 
+                        dir=os.path.join(self.log_dir, "best_checkpoint.pt"), 
                         validation_loss=validation_loss, 
                         trained_epoch=epoch
                     )
@@ -88,6 +101,7 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
     def train(
         self, epochs: int, validation: bool = False, 
         rec_best_checkpoint: bool = False, rec_latest_checkpoint: bool = False,
+        rec_runtime_msg: bool = False,
     ):
         max_acc = -1.
         for epoch in range(epochs):
@@ -106,6 +120,15 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
                     f"epoch {epoch}: train_loss={train_loss}, "
                     f"train_acc={train_acc}"
                 )
+
+            if rec_runtime_msg:
+                kv_loss = {"train_loss": train_loss}
+                kv_acc = {"train_acc": train_acc}
+                if validation:
+                    kv_loss["validation_loss"] = validation_loss
+                    kv_acc["validation_acc"] = validation_acc
+                self.add_runtime_records(main_tag="loss", kv=kv_loss, idx=epoch)
+                self.add_runtime_records(main_tag="acc", kv=kv_acc, idx=epoch)
 
             if validation_acc > max_acc:
                 max_acc = validation_acc

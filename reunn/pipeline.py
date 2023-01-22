@@ -1,6 +1,6 @@
 import abc
 import os
-
+from typing import Dict
 
 class TaskPipeline(abc.ABC):
 
@@ -18,12 +18,16 @@ class TaskPipeline(abc.ABC):
     def test(self, *args, **kwargs):
         pass
 
+    def save_pipeline_state(self, dir: str, extra_value_dict: Dict):
+        self.imp.save_pipeline_state(dir=dir, **extra_value_dict)
+
     def load_pipeline_state(self, dir: str):
         chk = self.imp.load_pipeline_state(dir)
         for k, v in chk.items():
             if k in ["state_dict"]:
                 continue
             print(f"{k}={v}")
+        return chk
 
 
 class SupervisedTaskPipeline(TaskPipeline):

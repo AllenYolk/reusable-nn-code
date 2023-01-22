@@ -30,3 +30,7 @@ class BasePipelineImp(abc.ABC):
     @abc.abstractmethod
     def load_pipeline_state(self, dir: str):
         pass
+
+    @abc.abstractmethod
+    def add_runtime_records(self, main_tag, kv, step):
+        pass

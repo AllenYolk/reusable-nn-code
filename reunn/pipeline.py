@@ -4,11 +4,8 @@ from typing import Dict
 
 class TaskPipeline(abc.ABC):
 
-    def __init__(self, imp, log_dir: str):
+    def __init__(self, imp):
         self.imp = imp
-        if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
-        self.log_dir = log_dir
 
     @abc.abstractmethod
     def train(self, *args, **kwargs):
@@ -18,11 +15,11 @@ class TaskPipeline(abc.ABC):
     def test(self, *args, **kwargs):
         pass
 
-    def save_pipeline_state(self, dir: str, extra_value_dict: Dict):
-        self.imp.save_pipeline_state(dir=dir, **extra_value_dict)
+    def save_pipeline_state(self, file: str, extra_value_dict: Dict):
+        self.imp.save_pipeline_state(file=file, **extra_value_dict)
 
-    def load_pipeline_state(self, dir: str):
-        chk = self.imp.load_pipeline_state(dir)
+    def load_pipeline_state(self, file: str):
+        chk = self.imp.load_pipeline_state(file=file)
         for k, v in chk.items():
             if k in ["state_dict"]:
                 continue
@@ -44,8 +41,7 @@ class SupervisedTaskPipeline(TaskPipeline):
             imp = torch_imp.TorchPipelineImp(net=net, log_dir=log_dir, **kwargs)
         else:
             raise ValueError(f"{backend} backend not supported!")
-
-        super().__init__(imp, log_dir)
+        super().__init__(imp)
 
     def train(
         self, epochs: int, validation: bool = False,
@@ -74,14 +70,14 @@ class SupervisedTaskPipeline(TaskPipeline):
                 min_loss = validation_loss
                 if rec_best_checkpoint:
                     self.imp.save_pipeline_state(
-                        dir=os.path.join(self.log_dir, "best_checkpoint.pt"), 
+                        file="best_checkpoint.pt", 
                         validation_loss=validation_loss, 
                         trained_epoch=epoch
                     )
 
             if rec_latest_checkpoint:
                 self.imp.save_pipeline_state(
-                    dir=os.path.join(self.log_dir, "latest_checkpoint.pt"),
+                    file="latest_checkpoint.pt",
                     validation_loss=validation_loss,
                     trained_epoch=epoch
                 )
@@ -134,7 +130,7 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
                 max_acc = validation_acc
                 if rec_best_checkpoint:
                     self.imp.save_pipeline_state(
-                        dir=os.path.join(self.log_dir, "best_checkpoint.pt"), 
+                        file="best_checkpoint.pt", 
                         validation_loss=validation_loss, 
                         validation_acc=validation_acc,
                         trained_epoch=epoch
@@ -142,7 +138,7 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
 
             if rec_latest_checkpoint:
                 self.imp.save_pipeline_state(
-                    dir=os.path.join(self.log_dir, "latest_checkpoint.pt"),
+                    file="latest_checkpoint.pt",
                     validation_loss=validation_loss,
                     validation_acc=validation_acc,
                     trained_epoch=epoch

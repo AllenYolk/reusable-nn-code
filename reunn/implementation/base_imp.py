@@ -1,10 +1,13 @@
 import abc
+import os
 
 
 class BasePipelineImp(abc.ABC):
 
-    def __init__(self):
-        pass
+    def __init__(self, log_dir):
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+        self.log_dir = log_dir
 
     @staticmethod
     @abc.abstractmethod

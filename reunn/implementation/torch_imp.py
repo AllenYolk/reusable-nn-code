@@ -1,4 +1,5 @@
 from typing import Optional, Callable
+import os
 
 import torch
 import torch.nn as nn
@@ -20,9 +21,8 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         test_loader: Optional[data.DataLoader] = None,
         validation_loader: Optional[data.DataLoader] = None,
     ):
-        super().__init__()
+        super().__init__(log_dir)
         self.net = net
-        self.log_dir = log_dir
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.validation_loader = validation_loader
@@ -94,7 +94,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         return self._tv_step(self.validation_loader, compute_acc)
 
     def save_pipeline_state(
-        self, dir: str, validation_loss: Optional[float] = None,
+        self, file: str, validation_loss: Optional[float] = None,
         validation_acc: Optional[float] = None,
         trained_epoch: Optional[int] = None,
     ):
@@ -105,9 +105,12 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             chk["validation_acc"] = validation_acc
         if trained_epoch is not None:
             chk["trained_epoch"] = trained_epoch
+
+        dir = os.path.join(self.log_dir, file)
         torch.save(chk, dir)
 
-    def load_pipeline_state(self, dir: str):
+    def load_pipeline_state(self, file: str):
+        dir = os.path.join(self.log_dir, file)
         chk = torch.load(dir)
         if "state_dict" in chk:
             self.net.load_state_dict(chk["state_dict"])

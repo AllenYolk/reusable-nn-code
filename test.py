@@ -46,15 +46,18 @@ def train_test(data_dir, log_dir):
     )
     net = Net()
     p = pipeline.SupervisedClassificationTaskPipeline(
-        backend="torch", net=net, log_dir="../log_dir",
+        backend="torch", net=net, log_dir=log_dir,
         criterion=nn.CrossEntropyLoss(),
         optimizer=optim.Adam(params=net.parameters(),lr=1e-4),
         train_loader=train_loader, validation_loader=validation_loader
     )
-    p.train(epochs=50, validation=True, rec_best_checkpoint=True)
+    p.train(
+        epochs=50, validation=True, rec_best_checkpoint=True, 
+        rec_latest_checkpoint=True, rec_runtime_msg=True
+    )
 
 
-def load_test_test(data_dir, checkpoint_dir):
+def load_test_test(data_dir, log_dir):
     test_loader = data.DataLoader(
         datasets.FashionMNIST(
             root=data_dir, train=False,
@@ -64,11 +67,11 @@ def load_test_test(data_dir, checkpoint_dir):
     )
     net = Net()
     p = pipeline.SupervisedClassificationTaskPipeline(
-        backend="torch", net=net, log_dir="../log_dir",
+        backend="torch", net=net, log_dir=log_dir,
         criterion=nn.CrossEntropyLoss(),
         test_loader=test_loader
     )
-    p.load_pipeline_state(dir=checkpoint_dir)
+    p.load_pipeline_state(file=log_dir + "/best_checkpoint.pt")
     p.test()
 
 
@@ -82,4 +85,4 @@ if __name__ == "__main__":
     if args.mode == "train":
         train_test(args.data_dir, args.log_dir)
     elif args.mode == "load":
-        load_test_test(args.data_dir, args.log_dir + "/best_checkpoint.pt")
+        load_test_test(args.data_dir, args.log_dir)

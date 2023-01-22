@@ -3,6 +3,7 @@ from typing import Optional, Callable, Tuple
 import torch
 import torch.nn as nn
 from torch.utils import data
+from torch.utils import tensorboard
 from torch import optim
 from tqdm import tqdm
 
@@ -91,10 +92,13 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         return self._tv_step(self.validation_loader, compute_acc)
 
     def save_pipeline_state(
-        self, dir: str, validation_acc: Optional[float] = None,
+        self, dir: str, validation_loss: Optional[float] = None,
+        validation_acc: Optional[float] = None,
         trained_epoch: Optional[int] = None,
     ):
         chk = {"state_dict": self.net.state_dict()}
+        if validation_loss is not None:
+            chk["validation_loss"] = validation_loss
         if validation_acc is not None:
             chk["validation_acc"] = validation_acc
         if trained_epoch is not None:

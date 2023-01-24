@@ -16,4 +16,4 @@ pip install .
 ## TODO:
 * [x] Add `setup.py` and write the installation guide.
 * [x] Implement `TaskPipeline`. Use the "Bridge" design pattern here.
-* [ ] Implement `NetStats`. Use the "Bridge" design pattern here. Use `fvcore` to implement pytorch-based `NetStats`.
+* [x] Implement `NetStats`. Use the "Bridge" design pattern here. Use `fvcore` to implement pytorch-based `NetStats`.

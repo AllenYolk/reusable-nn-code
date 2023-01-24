@@ -1,3 +1,6 @@
-matplotlib
-numpy
 tqdm
+
+# to use torch backend:
+# torch
+# torchvision
+# fvcore

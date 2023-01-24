@@ -8,6 +8,7 @@ from torchvision import datasets
 from torchvision import transforms
 
 from reunn import pipeline
+from reunn import stats
 
 
 class Net(nn.Module):
@@ -75,6 +76,14 @@ def load_test_test(data_dir, log_dir):
     p.test()
 
 
+def stats_test():
+    net = Net()
+    s = stats.NetStats(net=net, input_shape=[1, 1, 28, 28])
+    print(f"#parameters: {s.count_parameter()}")
+    print(f"#MACs: {s.count_mac()}")
+    s.print_summary()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, default="../datasets/")
@@ -86,3 +95,5 @@ if __name__ == "__main__":
         train_test(args.data_dir, args.log_dir)
     elif args.mode == "load":
         load_test_test(args.data_dir, args.log_dir)
+    elif args.mode == "stats":
+        stats_test()

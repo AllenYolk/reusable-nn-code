@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, Sequence
 import os
 
 import torch
@@ -7,6 +7,7 @@ from torch.utils import data
 from torch.utils import tensorboard
 from torch import optim
 from tqdm import tqdm
+import fvcore.nn
 
 from reunn.implementation import base_imp
 
@@ -125,3 +126,27 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         if self.writer is not None:
             self.writer.close()
             self.writer = None
+
+
+class TorchStatsImp(base_imp.BaseStatsImp):
+
+    def __init__(self, net, input_shape: Sequence[int]):
+        super().__init__(net, input_shape)
+        self._flop_count_analysis = None
+
+    @property
+    def flop_count_analysis(self):
+        if self._flop_count_analysis is None:
+            self._flop_count_analysis = fvcore.nn.FlopCountAnalysis(
+                model=self.net, inputs=torch.randn(size=self.input_shape)
+            )
+        return self._flop_count_analysis
+
+    def count_parameter(self):
+        return fvcore.nn.parameter_count(self.net)[""]
+
+    def count_mac(self):
+        return self.flop_count_analysis.total()
+
+    def print_summary(self):
+        print(fvcore.nn.flop_count_table(self.flop_count_analysis))

@@ -1,5 +1,6 @@
 import abc
 import os
+from typing import Sequence
 
 
 class BasePipelineImp(abc.ABC):
@@ -40,4 +41,23 @@ class BasePipelineImp(abc.ABC):
 
     @abc.abstractmethod
     def clear_runtime_records(self):
+        pass
+
+
+class BaseStatsImp(abc.ABC):
+
+    def __init__(self, net, input_shape: Sequence[int]):
+        self.net = net
+        self.input_shape = input_shape
+
+    @abc.abstractmethod
+    def count_parameter(self):
+        pass
+
+    @abc.abstractmethod
+    def count_mac(self):
+        pass
+
+    @abc.abstractmethod
+    def print_summary(self):
         pass

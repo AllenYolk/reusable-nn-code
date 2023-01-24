@@ -2,6 +2,7 @@ import abc
 import os
 from typing import Dict
 
+
 class TaskPipeline(abc.ABC):
 
     def __init__(self, imp):

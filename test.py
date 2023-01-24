@@ -7,8 +7,7 @@ from torch.utils import data
 from torchvision import datasets
 from torchvision import transforms
 
-from reunn import pipeline
-from reunn import stats
+import reunn
 
 
 class Net(nn.Module):
@@ -46,7 +45,7 @@ def train_test(data_dir, log_dir):
         batch_size=64, shuffle=True
     )
     net = Net()
-    p = pipeline.SupervisedClassificationTaskPipeline(
+    p = reunn.SupervisedClassificationTaskPipeline(
         backend="torch", net=net, log_dir=log_dir,
         criterion=nn.CrossEntropyLoss(),
         optimizer=optim.Adam(params=net.parameters(),lr=1e-4),
@@ -67,7 +66,7 @@ def load_test_test(data_dir, log_dir):
         batch_size=64, shuffle=True
     )
     net = Net()
-    p = pipeline.SupervisedClassificationTaskPipeline(
+    p = reunn.SupervisedClassificationTaskPipeline(
         backend="torch", net=net, log_dir=log_dir,
         criterion=nn.CrossEntropyLoss(),
         test_loader=test_loader
@@ -78,7 +77,7 @@ def load_test_test(data_dir, log_dir):
 
 def stats_test():
     net = Net()
-    s = stats.NetStats(net=net, input_shape=[1, 1, 28, 28])
+    s = reunn.NetStats(net=net, input_shape=[1, 1, 28, 28])
     print(f"#parameters: {s.count_parameter()}")
     print(f"#MACs: {s.count_mac()}")
     s.print_summary()

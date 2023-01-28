@@ -66,7 +66,8 @@ class SupervisedTaskPipeline(TaskPipeline):
                     kv["validation_loss"] = validation_loss
                 self.add_runtime_records(main_tag="loss", kv=kv, idx=epoch)
 
-            if validation_loss < min_loss:
+            # rec_best_checkpoint has its effect only if validation=True.
+            if validation and (validation_loss < min_loss):
                 min_loss = validation_loss
                 if rec_best_checkpoint:
                     self.imp.save_pipeline_state(
@@ -126,7 +127,8 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
                 self.add_runtime_records(main_tag="loss", kv=kv_loss, idx=epoch)
                 self.add_runtime_records(main_tag="acc", kv=kv_acc, idx=epoch)
 
-            if validation_acc > max_acc:
+            # rec_best_checkpoint has its effect only if validation=True.
+            if validation and (validation_acc > max_acc):
                 max_acc = validation_acc
                 if rec_best_checkpoint:
                     self.imp.save_pipeline_state(

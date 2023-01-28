@@ -18,5 +18,5 @@ pip install .
 * [x] Implement `TaskPipeline`. Use the "Bridge" design pattern here.
 * [x] Implement `NetStats`. Use the "Bridge" design pattern here. Use `fvcore` to implement pytorch-based `NetStats`.
 * [ ] Add silent training mode.
-* [ ] Fix bug: when training with `validation=False`, `validation_loss` is `None`. But it is accessed and compared with `min_loss`.
+* [x] Fix bug: when training with `validation=False`, `validation_loss` is `None`. But it is accessed and compared with `min_loss`.
 * [ ] Add continual learning task pipeline.

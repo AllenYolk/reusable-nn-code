@@ -37,13 +37,17 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             labels = labels.argmax(dim=1)
         return (pred.argmax(dim=1) == labels).sum().item()
 
-    def train_step(self, validation: bool = False, compute_acc: bool = False):
+    def train_step(
+        self, validation: bool = False, compute_acc: bool = False, 
+        silent: bool = False,
+    ):
         train_loss, train_acc, train_sample_cnt = 0.0, None, 0
         if compute_acc:
             train_acc = 0
 
         self.net.train()
-        for data, labels in tqdm(self.train_loader):
+        iterable = self.train_loader if silent else tqdm(self.train_loader)
+        for data, labels in iterable:
             pred = self.net(data)
             loss = self.criterion(pred, labels)
 
@@ -97,6 +101,8 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
     def save_pipeline_state(
         self, file: str, validation_loss: Optional[float] = None,
         validation_acc: Optional[float] = None,
+        train_loss: Optional[float] = None, train_acc: Optional[float] = None,
+        min_loss_type: Optional[str] = None, max_acc_type: Optional[str] = None,
         trained_epoch: Optional[int] = None,
     ):
         chk = {"state_dict": self.net.state_dict()}
@@ -104,8 +110,16 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             chk["validation_loss"] = validation_loss
         if validation_acc is not None:
             chk["validation_acc"] = validation_acc
+        if train_loss is not None:
+            chk["train_loss"] = train_loss
+        if train_acc is not None:
+            chk["train_acc"] = train_acc
         if trained_epoch is not None:
             chk["trained_epoch"] = trained_epoch
+        if min_loss_type is not None:
+            chk["min_loss_type"] = min_loss_type
+        if max_acc_type is not None:
+            chk["max_acc_type"] = max_acc_type
 
         dir = os.path.join(self.log_dir, file)
         torch.save(chk, dir)

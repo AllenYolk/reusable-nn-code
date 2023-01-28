@@ -46,19 +46,22 @@ class SupervisedTaskPipeline(TaskPipeline):
     def train(
         self, epochs: int, validation: bool = False,
         rec_best_checkpoint: bool = False, rec_latest_checkpoint: bool = False,
-        rec_runtime_msg: bool = False,
+        rec_runtime_msg: bool = False, silent: bool = False,
     ):
         min_loss = float("inf")
         for epoch in range(epochs):
-            train_loss, _, validation_loss, _ = self.imp.train_step(validation)
+            train_loss, _, validation_loss, _ = self.imp.train_step(
+                validation, silent=silent
+            )
 
-            if validation:
-                print(
-                    f"epoch {epoch}: train_loss={train_loss}, "
-                    f"validation_loss={validation_loss}"
-                )
-            else:
-                print(f"epoch {epoch}: train_loss={train_loss}")
+            if not silent:
+                if validation:
+                    print(
+                        f"epoch {epoch}: train_loss={train_loss}, "
+                        f"validation_loss={validation_loss}"
+                    )
+                else:
+                    print(f"epoch {epoch}: train_loss={train_loss}")
 
             if rec_runtime_msg:
                 kv = {"train_loss": train_loss}
@@ -66,28 +69,43 @@ class SupervisedTaskPipeline(TaskPipeline):
                     kv["validation_loss"] = validation_loss
                 self.add_runtime_records(main_tag="loss", kv=kv, idx=epoch)
 
-            # rec_best_checkpoint has its effect only if validation=True.
-            if validation and (validation_loss < min_loss):
-                min_loss = validation_loss
-                if rec_best_checkpoint:
-                    self.imp.save_pipeline_state(
-                        file="best_checkpoint.pt", 
-                        validation_loss=validation_loss, 
-                        trained_epoch=epoch
-                    )
+            min_loss_type = "validation" if validation else "train"
+            if validation:
+                if validation_loss < min_loss:
+                    min_loss = validation_loss
+                    if rec_best_checkpoint: 
+                        self.imp.save_pipeline_state(
+                            file="best_checkpoint.pt", 
+                            validation_loss=validation_loss, 
+                            train_loss=train_loss,
+                            min_loss_type=min_loss_type,
+                            trained_epoch=epoch
+                        )
+            else:
+                if train_loss < min_loss:
+                    min_loss = train_loss
+                    if rec_best_checkpoint:
+                        self.imp.save_pipeline_state(
+                            file="best_checkpoint.pt", 
+                            train_loss=train_loss, 
+                            min_loss_type=min_loss_type,
+                            trained_epoch=epoch
+                        )
 
             if rec_latest_checkpoint:
                 self.imp.save_pipeline_state(
                     file="latest_checkpoint.pt",
                     validation_loss=validation_loss,
+                    train_loss=train_loss,
+                    min_loss_type=min_loss_type,
                     trained_epoch=epoch
                 )
 
-        print(f"Training finished! min_validation_loss={min_loss}")
+        print(f"Training finished! min_{min_loss_type}_loss={min_loss}")
 
     def test(self):
         test_loss, _ = self.imp.test_step(compute_acc=False)
-        print(f"test_loss={test_loss}")
+        print(f"Test finished! test_loss={test_loss}")
 
 
 class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
@@ -98,25 +116,28 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
     def train(
         self, epochs: int, validation: bool = False, 
         rec_best_checkpoint: bool = False, rec_latest_checkpoint: bool = False,
-        rec_runtime_msg: bool = False,
+        rec_runtime_msg: bool = False, silent: bool = False
     ):
         max_acc = -1.
         for epoch in range(epochs):
             train_loss, train_acc, validation_loss, validation_acc =\
-                self.imp.train_step(validation, compute_acc=True)
+                self.imp.train_step(
+                    validation, compute_acc=True, silent=silent
+                )
 
-            if validation:
-                print(
-                    f"epoch {epoch}: train_loss={train_loss}, "
-                    f"train_acc={train_acc}, "
-                    f"validation_loss={validation_loss}, "
-                    f"validation_acc={validation_acc}"
-                )
-            else:
-                print(
-                    f"epoch {epoch}: train_loss={train_loss}, "
-                    f"train_acc={train_acc}"
-                )
+            if not silent:
+                if validation:
+                    print(
+                        f"epoch {epoch}: train_loss={train_loss}, "
+                        f"train_acc={train_acc}, "
+                        f"validation_loss={validation_loss}, "
+                        f"validation_acc={validation_acc}"
+                    )
+                else:
+                    print(
+                        f"epoch {epoch}: train_loss={train_loss}, "
+                        f"train_acc={train_acc}"
+                    )
 
             if rec_runtime_msg:
                 kv_loss = {"train_loss": train_loss}
@@ -127,25 +148,45 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
                 self.add_runtime_records(main_tag="loss", kv=kv_loss, idx=epoch)
                 self.add_runtime_records(main_tag="acc", kv=kv_acc, idx=epoch)
 
-            # rec_best_checkpoint has its effect only if validation=True.
-            if validation and (validation_acc > max_acc):
-                max_acc = validation_acc
-                if rec_best_checkpoint:
-                    self.imp.save_pipeline_state(
-                        file="best_checkpoint.pt", 
-                        validation_loss=validation_loss, 
-                        validation_acc=validation_acc,
-                        trained_epoch=epoch
-                    )
+            max_acc_type = "validation" if validation else "train"
+            if validation:
+                if validation_acc > max_acc:
+                    max_acc = validation_acc
+                    if rec_best_checkpoint:
+                        self.imp.save_pipeline_state(
+                            file="best_checkpoint.pt", 
+                            validation_loss=validation_loss, 
+                            validation_acc=validation_acc,
+                            train_loss=train_loss,
+                            train_acc=train_acc,
+                            max_acc_type=max_acc_type,
+                            trained_epoch=epoch
+                        )
+            else:
+                if train_acc > max_acc:
+                    max_acc = train_acc
+                    if rec_best_checkpoint:
+                        self.imp.save_pipeline_state(
+                            file="best_checkpoint.pt",
+                            train_loss=train_loss,
+                            train_acc=train_acc,
+                            max_acc_type=max_acc_type,
+                            trained_epoch=epoch
+                        )
 
             if rec_latest_checkpoint:
                 self.imp.save_pipeline_state(
                     file="latest_checkpoint.pt",
                     validation_loss=validation_loss,
                     validation_acc=validation_acc,
+                    train_loss=train_loss,
+                    train_acc=train_acc,
+                    max_acc_type=max_acc_type,
                     trained_epoch=epoch
                 )
 
+        print(f"Training finished! max_{max_acc_type}_acc={max_acc}")
+
     def test(self):
         test_loss, test_acc = self.imp.test_step(compute_acc=True)
-        print(f"test_loss={test_loss}, test_acc={test_acc}")
+        print(f"Test finished! test_loss={test_loss}, test_acc={test_acc}")

@@ -55,7 +55,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             loss.backward()
             self.optimizer.step()
 
-            train_loss += loss.item()
+            train_loss += loss.item() * labels.shape[0]
             train_sample_cnt += labels.shape[0]
             if compute_acc:
                 train_acc += self.acc_cnt(pred, labels)
@@ -81,7 +81,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
                 pred = self.net(data)
                 loss = self.criterion(pred, labels)
 
-                accumulate_loss += loss.item()
+                accumulate_loss += loss.item() * labels.shape[0]
                 accumulate_sample_cnt += labels.shape[0]
                 if compute_acc:
                     accumulate_acc += self.acc_cnt(pred, labels)

@@ -29,7 +29,7 @@ class Net(nn.Module):
         return self.f(x)
 
 
-def train_test(data_dir, log_dir):
+def train_test(data_dir, log_dir, epoch, silent):
     train_loader = data.DataLoader(
         datasets.FashionMNIST(
             root=data_dir, train=True, 
@@ -52,8 +52,8 @@ def train_test(data_dir, log_dir):
         train_loader=train_loader, validation_loader=validation_loader
     )
     p.train(
-        epochs=50, validation=True, rec_best_checkpoint=True, 
-        rec_latest_checkpoint=True, rec_runtime_msg=True
+        epochs=epoch, validation=True, rec_best_checkpoint=True, 
+        rec_latest_checkpoint=True, rec_runtime_msg=True, silent=silent
     )
 
 
@@ -71,7 +71,7 @@ def load_test_test(data_dir, log_dir):
         criterion=nn.CrossEntropyLoss(),
         test_loader=test_loader
     )
-    p.load_pipeline_state(file=log_dir + "/best_checkpoint.pt")
+    p.load_pipeline_state(file="best_checkpoint.pt")
     p.test()
 
 
@@ -87,11 +87,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, default="../datasets/")
     parser.add_argument("--log_dir", type=str, default="../log_dir")
-    parser.add_argument("-m", "--mode", type=str, default="load")
+    parser.add_argument("-m", "--mode", type=str, default="train")
+    parser.add_argument("-s", "--silent", action="store_true")
+    parser.add_argument("-e", "--epochs", type=int, default=50)
     args = parser.parse_args()
 
     if args.mode == "train":
-        train_test(args.data_dir, args.log_dir)
+        train_test(args.data_dir, args.log_dir, args.epochs, args.silent)
     elif args.mode == "load":
         load_test_test(args.data_dir, args.log_dir)
     elif args.mode == "stats":

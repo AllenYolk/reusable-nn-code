@@ -1,5 +1,6 @@
 import abc
-from typing import Dict
+from typing import Dict, List
+from collections import defaultdict
 
 
 class TaskPipeline(abc.ABC):
@@ -8,15 +9,15 @@ class TaskPipeline(abc.ABC):
         self.imp = imp
 
     @abc.abstractmethod
-    def train(self, *args, **kwargs):
+    def train(self, *args, **kwargs) -> Dict:
         pass
 
     @abc.abstractmethod
-    def test(self, *args, **kwargs):
+    def test(self, *args, **kwargs) -> Dict:
         pass
 
-    def save_pipeline_state(self, file: str, extra_value_dict: Dict):
-        self.imp.save_pipeline_state(file=file, **extra_value_dict)
+    def save_pipeline_state(self, file: str, **kwargs):
+        self.imp.save_pipeline_state(file=file, **kwargs)
 
     def load_pipeline_state(self, file: str):
         chk = self.imp.load_pipeline_state(file=file)
@@ -47,12 +48,17 @@ class SupervisedTaskPipeline(TaskPipeline):
         self, epochs: int, validation: bool = False,
         rec_best_checkpoint: bool = False, rec_latest_checkpoint: bool = False,
         rec_runtime_msg: bool = False, silent: bool = False,
-    ):
+    ) -> Dict[str, List[float]]:
         min_loss = float("inf")
+        results = defaultdict(list)
+
         for epoch in range(epochs):
             train_loss, _, validation_loss, _ = self.imp.train_step(
                 validation, silent=silent
             )
+            results["train_loss"].append(train_loss)
+            if validation:
+                results["validation_loss"].append(validation_loss)
 
             if not silent:
                 if validation:
@@ -102,10 +108,12 @@ class SupervisedTaskPipeline(TaskPipeline):
                 )
 
         print(f"Training finished! min_{min_loss_type}_loss={min_loss}")
+        return results
 
-    def test(self):
+    def test(self) -> Dict[str, float]:
         test_loss, _ = self.imp.test_step(compute_acc=False)
         print(f"Test finished! test_loss={test_loss}")
+        return {"test_loss": test_loss}
 
 
 class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
@@ -117,13 +125,20 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
         self, epochs: int, validation: bool = False, 
         rec_best_checkpoint: bool = False, rec_latest_checkpoint: bool = False,
         rec_runtime_msg: bool = False, silent: bool = False
-    ):
+    ) -> Dict[str, List[float]]:
         max_acc = -1.
+        results = defaultdict(list)
+
         for epoch in range(epochs):
             train_loss, train_acc, validation_loss, validation_acc =\
                 self.imp.train_step(
                     validation, compute_acc=True, silent=silent
                 )
+            results["train_loss"].append(train_loss)
+            results["train_acc"].append(train_acc)
+            if validation:
+                results["validation_loss"].append(validation_loss)
+                results["validation_acc"].append(validation_acc)
 
             if not silent:
                 if validation:
@@ -186,7 +201,9 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
                 )
 
         print(f"Training finished! max_{max_acc_type}_acc={max_acc}")
+        return results
 
-    def test(self):
+    def test(self) -> Dict[str, float]:
         test_loss, test_acc = self.imp.test_step(compute_acc=True)
         print(f"Test finished! test_loss={test_loss}, test_acc={test_acc}")
+        return {"test_loss": test_loss, "test_acc": test_acc}

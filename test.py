@@ -1,6 +1,5 @@
 import argparse
 
-import torch
 from torch import optim
 import torch.nn as nn
 from torch.utils import data

@@ -40,6 +40,11 @@ class SupervisedTaskPipeline(TaskPipeline):
         if backend == "torch":
             from reunn.implementation import torch_imp
             imp = torch_imp.TorchPipelineImp(net=net, log_dir=log_dir, **kwargs)
+        elif backend == "spikingjelly":
+            from reunn.implementation import spikingjelly_imp
+            imp = spikingjelly_imp.SpikingjellyActivationBasedPipelineImp(
+                net=net, log_dir=log_dir, **kwargs
+            )
         else:
             raise ValueError(f"{backend} backend not supported!")
         super().__init__(imp)

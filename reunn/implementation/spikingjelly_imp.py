@@ -27,10 +27,8 @@ class SpikingjellyActivationBasedPipelineImp(torch_imp.TorchPipelineImp):
     def data_label_process(self, data, labels, mode):
         functional.reset_net(self.net)
         n_dim_data = len(data.shape)
-        return (
-            data.unsqueeze(0).repeat(self.T, *[1 for _ in range(n_dim_data)]),
-            labels
-        )
+        data = data.unsqueeze(0).repeat(self.T, *[1 for _ in range(n_dim_data)])
+        return data, labels
 
     def pred_process(self, pred, mode):
         return pred.sum(dim = 0)

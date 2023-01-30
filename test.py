@@ -6,27 +6,11 @@ import torch.nn as nn
 from torch.utils import data
 from torchvision import datasets
 from torchvision import transforms
+from spikingjelly.activation_based import neuron
+from spikingjelly.activation_based import layer
+from spikingjelly.activation_based import functional
 
 import reunn
-
-
-class Net(nn.Module):
-
-    def __init__(self):
-        super().__init__()
-        self.f = nn.Sequential(
-            nn.Conv2d(1, 4, 3, 1, 1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(4, 16, 3, 1, 1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Flatten(),
-            nn.Linear(16*7*7, 10)
-        )
-
-    def forward(self, x):
-        return self.f(x)
 
 
 def train_test(data_dir, log_dir, epoch, silent):
@@ -44,7 +28,15 @@ def train_test(data_dir, log_dir, epoch, silent):
         ),
         batch_size=64, shuffle=True
     )
-    net = Net()
+    net = nn.Sequential(
+        nn.Flatten(),
+        nn.Linear(784, 512),
+        nn.ReLU(),
+        nn.Dropout(p = 0.5),
+        nn.Linear(512, 128),
+        nn.ReLU(),
+        nn.Linear(128, 10),
+    )
     p = reunn.SupervisedClassificationTaskPipeline(
         backend="torch", net=net, log_dir=log_dir,
         criterion=nn.CrossEntropyLoss(),
@@ -65,7 +57,15 @@ def load_test_test(data_dir, log_dir):
         ),
         batch_size=64, shuffle=True
     )
-    net = Net()
+    net = nn.Sequential(
+        nn.Flatten(),
+        nn.Linear(784, 512),
+        nn.ReLU(),
+        nn.Dropout(p = 0.5),
+        nn.Linear(512, 128),
+        nn.ReLU(),
+        nn.Linear(128, 10),
+    )
     p = reunn.SupervisedClassificationTaskPipeline(
         backend="torch", net=net, log_dir=log_dir,
         criterion=nn.CrossEntropyLoss(),
@@ -76,20 +76,68 @@ def load_test_test(data_dir, log_dir):
 
 
 def stats_test():
-    net = Net()
+    net = nn.Sequential(
+        nn.Flatten(),
+        nn.Linear(784, 512),
+        nn.ReLU(),
+        nn.Dropout(p = 0.5),
+        nn.Linear(512, 128),
+        nn.ReLU(),
+        nn.Linear(128, 10),
+    )
     s = reunn.NetStats(net=net, input_shape=[1, 1, 28, 28])
     print(f"#parameters: {s.count_parameter()}")
     print(f"#MACs: {s.count_mac()}")
     s.print_summary()
 
 
+def spikingjelly_test(data_dir, log_dir, epoch, T, silent):
+    net = nn.Sequential(
+        layer.Flatten(),
+        layer.Linear(784, 512),
+        neuron.IFNode(),
+        layer.Linear(512, 128),
+        neuron.IFNode(),
+        layer.Linear(128, 10),
+    )
+    functional.set_step_mode(net, "m")
+    s = reunn.NetStats(net=net, input_shape=[T, 1, 1, 28, 28])
+    s.print_summary()
+
+    train_loader = data.DataLoader(
+        datasets.MNIST(
+            root=data_dir, train=True, 
+            download=True, transform=transforms.ToTensor(),
+        ),
+        batch_size=32, shuffle=True
+    )
+    validation_loader = data.DataLoader(
+        datasets.MNIST(
+            root=data_dir, train=False, 
+            download=True, transform=transforms.ToTensor(),
+        ),
+        batch_size=32, shuffle=True
+    )
+    p = reunn.SupervisedClassificationTaskPipeline(
+        backend="spikingjelly", net=net, log_dir=log_dir, T=T,
+        criterion=nn.CrossEntropyLoss(),
+        optimizer=optim.Adam(params=net.parameters(),lr=1e-4),
+        train_loader=train_loader, validation_loader=validation_loader
+    )
+    p.train(
+        epochs=epoch, validation=True, rec_best_checkpoint=True, 
+        rec_latest_checkpoint=True, rec_runtime_msg=True, silent=silent
+    )
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, default="../datasets/")
     parser.add_argument("--log_dir", type=str, default="../log_dir")
-    parser.add_argument("-m", "--mode", type=str, default="train")
+    parser.add_argument("-m", "--mode", type=str, default="spikingjelly")
     parser.add_argument("-s", "--silent", action="store_true")
-    parser.add_argument("-e", "--epochs", type=int, default=50)
+    parser.add_argument("-e", "--epochs", type=int, default=10)
+    parser.add_argument("-T", type=int, default=4)
     args = parser.parse_args()
 
     if args.mode == "train":
@@ -98,3 +146,7 @@ if __name__ == "__main__":
         load_test_test(args.data_dir, args.log_dir)
     elif args.mode == "stats":
         stats_test()
+    elif args.mode == "spikingjelly":
+        spikingjelly_test(
+            args.data_dir, args.log_dir, args.epochs, args.T, args.silent,
+        )

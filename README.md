@@ -20,3 +20,4 @@ pip install .
 * [x] Add silent training mode.
 * [x] Fix bug: when training with `validation=False`, `validation_loss` is `None`. But it is accessed and compared with `min_loss`.
 * [ ] Add continual learning task pipeline.
+* [x] Add `spikingjelly` implementation (for SNN task pipelines and network statistics).

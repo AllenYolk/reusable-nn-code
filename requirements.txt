@@ -4,3 +4,6 @@ tqdm
 # torch
 # torchvision
 # fvcore
+
+# to use spikingjelly backend:
+# spikingjelly

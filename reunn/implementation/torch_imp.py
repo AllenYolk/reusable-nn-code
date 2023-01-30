@@ -37,6 +37,15 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             labels = labels.argmax(dim=1)
         return (pred.argmax(dim=1) == labels).sum().item()
 
+    def data_label_process(self, data, labels, mode):
+        return data, labels
+
+    def pred_process(self, pred, mode):
+        return pred
+
+    def loss_process(self, loss, mode):
+        return loss
+
     def train_step(
         self, validation: bool = False, compute_acc: bool = False, 
         silent: bool = False,
@@ -48,8 +57,11 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         self.net.train()
         iterable = self.train_loader if silent else tqdm(self.train_loader)
         for data, labels in iterable:
+            data, labels = self.data_label_process(data, labels, "train")
             pred = self.net(data)
+            pred = self.pred_process(pred, "train")
             loss = self.criterion(pred, labels)
+            loss = self.loss_process(loss, "train")
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -70,7 +82,9 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
 
         return train_loss, train_acc, validation_loss, validation_acc
 
-    def _tv_step(self, data_loader: data.DataLoader, compute_acc: bool = False):
+    def _tv_step(
+        self, mode: str, data_loader: data.DataLoader, compute_acc: bool = False
+    ):
         accumulate_loss, accumulate_acc, accumulate_sample_cnt = 0.0, None, 0
         if compute_acc:
             accumulate_acc = 0
@@ -78,8 +92,11 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         self.net.eval()
         with torch.no_grad():
             for data, labels in data_loader:
+                data, labels = self.data_label_process(data, labels, mode)
                 pred = self.net(data)
+                pred = self.pred_process(pred, mode)
                 loss = self.criterion(pred, labels)
+                loss = self.loss_process(loss, mode)
 
                 accumulate_loss += loss.item() * labels.shape[0]
                 accumulate_sample_cnt += labels.shape[0]
@@ -93,10 +110,10 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         return accumulate_loss, accumulate_acc
 
     def test_step(self, compute_acc: bool = False):
-        return self._tv_step(self.test_loader, compute_acc)
+        return self._tv_step("test", self.test_loader, compute_acc)
 
     def validation_step(self, compute_acc: bool = False):
-        return self._tv_step(self.validation_loader, compute_acc)
+        return self._tv_step("validation", self.validation_loader, compute_acc)
 
     def save_pipeline_state(
         self, file: str, validation_loss: Optional[float] = None,

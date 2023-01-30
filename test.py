@@ -101,7 +101,9 @@ def spikingjelly_test(data_dir, log_dir, epoch, T, silent):
         layer.Linear(128, 10),
     )
     functional.set_step_mode(net, "m")
-    s = reunn.NetStats(net=net, input_shape=[T, 1, 1, 28, 28])
+    s = reunn.NetStats(
+        net=net, input_shape=[T, 1, 1, 28, 28], backend="spikingjelly"
+    )
     s.print_summary()
 
     train_loader = data.DataLoader(
@@ -136,7 +138,7 @@ if __name__ == "__main__":
     parser.add_argument("--log_dir", type=str, default="../log_dir")
     parser.add_argument("-m", "--mode", type=str, default="spikingjelly")
     parser.add_argument("-s", "--silent", action="store_true")
-    parser.add_argument("-e", "--epochs", type=int, default=10)
+    parser.add_argument("-e", "--epochs", type=int, default=5)
     parser.add_argument("-T", type=int, default=4)
     args = parser.parse_args()
 

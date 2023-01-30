@@ -7,6 +7,9 @@ class NetStats:
         if backend == "torch":
             from reunn.implementation import torch_imp 
             imp = torch_imp.TorchStatsImp(net, input_shape=input_shape)
+        elif backend == "spikingjelly":
+            from reunn.implementation import spikingjelly_imp
+            imp = spikingjelly_imp.SpikingjellyStatsImp(net, input_shape)
         else:
             raise ValueError(f"{backend} backend not supported!")
         self.imp = imp

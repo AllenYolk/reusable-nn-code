@@ -57,7 +57,8 @@ class SupervisedTaskPipeline(TaskPipeline):
     def train(
         self, epochs: int, validation: bool = False,
         rec_best_checkpoint: bool = False, rec_latest_checkpoint: bool = False,
-        rec_runtime_msg: bool = False, silent: bool = False,
+        rec_runtime_msg: bool = False, rec_hparam_msg: bool = False, 
+        silent: bool = False,
     ) -> Dict[str, List[float]]:
         min_loss = float("inf")
         results = defaultdict(list)
@@ -118,10 +119,10 @@ class SupervisedTaskPipeline(TaskPipeline):
                 )
 
         print(f"Training finished! min_{min_loss_type}_loss={min_loss}")
-        self.imp.add_hparam_records(
-            metrics={f"min_{min_loss_type}_loss": min_loss}
-        )
-        self.close_writer()
+        if rec_hparam_msg:
+            self.imp.add_hparam_records(
+                metrics={f"min_{min_loss_type}_loss": min_loss}
+            )
         return results
 
     def test(self) -> Dict[str, float]:
@@ -141,7 +142,8 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
     def train(
         self, epochs: int, validation: bool = False, 
         rec_best_checkpoint: bool = False, rec_latest_checkpoint: bool = False,
-        rec_runtime_msg: bool = False, silent: bool = False
+        rec_runtime_msg: bool = False, rec_hparam_msg: bool = False,
+        silent: bool = False
     ) -> Dict[str, List[float]]:
         max_acc = -1.
         results = defaultdict(list)
@@ -218,10 +220,10 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
                 )
 
         print(f"Training finished! max_{max_acc_type}_acc={max_acc}")
-        self.imp.add_hparam_records(
-            metrics={f"max_{max_acc_type}_acc": max_acc}
-        )
-        self.close_writer()
+        if rec_hparam_msg:
+            self.imp.add_hparam_records(
+                metrics={f"max_{max_acc_type}_acc": max_acc}
+            )
         return results
 
     def test(self) -> Dict[str, float]:

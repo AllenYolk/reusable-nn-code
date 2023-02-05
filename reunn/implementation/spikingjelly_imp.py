@@ -1,5 +1,4 @@
 from typing import Optional, Callable, Sequence
-from types import SimpleNamespace
 
 import torch.nn as nn
 from torch import optim

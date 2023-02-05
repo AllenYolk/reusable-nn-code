@@ -166,6 +166,9 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             self.writer.close()
             self.writer = None
 
+    def __del__(self):
+        self.close_writer()
+
 
 class TorchStatsImp(base_imp.BaseStatsImp):
 

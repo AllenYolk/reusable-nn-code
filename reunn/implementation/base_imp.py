@@ -44,10 +44,6 @@ class BasePipelineImp(abc.ABC):
     def add_hparam_records(self, *args, **kwargs):
         pass
 
-    @abc.abstractmethod
-    def close_writer(self):
-        pass
-
 
 class BaseStatsImp(abc.ABC):
 

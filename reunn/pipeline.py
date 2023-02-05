@@ -30,8 +30,8 @@ class TaskPipeline(abc.ABC):
     def add_runtime_records(self, main_tag, kv, idx):
         self.imp.add_runtime_records(main_tag, kv, idx)
 
-    def close_writer(self):
-        self.imp.close_writer()
+    def add_hparam_records(self, metrics: dict):
+        self.imp.add_hparam_records(metrics)
 
 
 class SupervisedTaskPipeline(TaskPipeline):
@@ -125,9 +125,13 @@ class SupervisedTaskPipeline(TaskPipeline):
             )
         return results
 
-    def test(self) -> Dict[str, float]:
+    def test(self, rec_hparam_msg: bool = False) -> Dict[str, float]:
         test_loss, _ = self.imp.test_step(compute_acc=False)
         print(f"Test finished! test_loss={test_loss}")
+        if rec_hparam_msg:
+            self.imp.add_hparam_records(
+                metrics={"test_loss": test_loss}
+            )
         return {"test_loss": test_loss}
 
 
@@ -226,7 +230,11 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
             )
         return results
 
-    def test(self) -> Dict[str, float]:
+    def test(self, rec_hparam_msg: bool = False) -> Dict[str, float]:
         test_loss, test_acc = self.imp.test_step(compute_acc=True)
         print(f"Test finished! test_loss={test_loss}, test_acc={test_acc}")
+        if rec_hparam_msg:
+            self.imp.rec_hparam_msg(
+                metrics={"test_acc": test_acc, "test_loss": test_loss}
+            )
         return {"test_loss": test_loss, "test_acc": test_acc}

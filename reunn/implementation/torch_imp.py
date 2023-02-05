@@ -155,19 +155,19 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             self.writer = tensorboard.SummaryWriter(self.log_dir)
         self.writer.add_scalars(main_tag, kv, idx)
 
-    def add_hparam_records(self, metrics):
+    def add_hparam_records(self, metrics: dict):
         if self.writer is None:
             self.writer = tensorboard.SummaryWriter(self.log_dir)
         self.writer.add_hparams(self.hparam, metrics)
 
-    def close_writer(self):
+    def _close_writer(self):
         if self.writer is not None:
             self.writer.flush()
             self.writer.close()
             self.writer = None
 
     def __del__(self):
-        self.close_writer()
+        self._close_writer()
 
 
 class TorchStatsImp(base_imp.BaseStatsImp):

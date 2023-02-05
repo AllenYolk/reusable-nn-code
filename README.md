@@ -21,3 +21,5 @@ pip install .
 * [x] Fix bug: when training with `validation=False`, `validation_loss` is `None`. But it is accessed and compared with `min_loss`.
 * [ ] Add continual learning task pipeline.
 * [x] Add [`spikingjelly`](https://github.com/fangwei123456/spikingjelly) implementation (for SNN task pipelines and network statistics).
+* [ ] Add hyperparameter to task pipelines.
+* [ ] Close the summary writer when destructing the task pipeline.

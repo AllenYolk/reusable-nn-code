@@ -5,10 +5,11 @@ from typing import Sequence
 
 class BasePipelineImp(abc.ABC):
 
-    def __init__(self, log_dir):
+    def __init__(self, log_dir, hparam):
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
         self.log_dir = log_dir
+        self.hparam = hparam
 
     @staticmethod
     @abc.abstractmethod
@@ -36,11 +37,15 @@ class BasePipelineImp(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def add_runtime_records(self, main_tag, kv, idx):
+    def add_runtime_records(self, *args, **kwargs):
+        pass
+    
+    @abc.abstractmethod
+    def add_hparam_records(self, *args, **kwargs):
         pass
 
     @abc.abstractmethod
-    def clear_runtime_records(self):
+    def close_writer(self):
         pass
 
 

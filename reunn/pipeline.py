@@ -30,20 +30,25 @@ class TaskPipeline(abc.ABC):
     def add_runtime_records(self, main_tag, kv, idx):
         self.imp.add_runtime_records(main_tag, kv, idx)
 
-    def clear_runtime_records(self):
-        self.imp.clear_runtime_records()
+    def close_writer(self):
+        self.imp.close_writer()
 
 
 class SupervisedTaskPipeline(TaskPipeline):
 
-    def __init__(self, net, log_dir: str, backend: str = "torch", **kwargs):
+    def __init__(
+        self, net, log_dir: str, hparam: dict, backend: str = "torch", 
+        **kwargs
+    ):
         if backend == "torch":
             from reunn.implementation import torch_imp
-            imp = torch_imp.TorchPipelineImp(net=net, log_dir=log_dir, **kwargs)
+            imp = torch_imp.TorchPipelineImp(
+                net=net, log_dir=log_dir, hparam=hparam, **kwargs
+            )
         elif backend == "spikingjelly":
             from reunn.implementation import spikingjelly_imp
             imp = spikingjelly_imp.SpikingjellyActivationBasedPipelineImp(
-                net=net, log_dir=log_dir, **kwargs
+                net=net, log_dir=log_dir, hparam=hparam, **kwargs
             )
         else:
             raise ValueError(f"{backend} backend not supported!")
@@ -113,6 +118,10 @@ class SupervisedTaskPipeline(TaskPipeline):
                 )
 
         print(f"Training finished! min_{min_loss_type}_loss={min_loss}")
+        self.imp.add_hparam_records(
+            metrics={f"min_{min_loss_type}_loss": min_loss}
+        )
+        self.close_writer()
         return results
 
     def test(self) -> Dict[str, float]:
@@ -123,8 +132,11 @@ class SupervisedTaskPipeline(TaskPipeline):
 
 class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
 
-    def __init__(self, net, log_dir, backend: str = "torch", **kwargs):
-        super().__init__(net, log_dir, backend, **kwargs)
+    def __init__(
+        self, net, log_dir: str, hparam: dict, backend: str = "torch", 
+        **kwargs
+    ):
+        super().__init__(net, log_dir, hparam, backend, **kwargs)
 
     def train(
         self, epochs: int, validation: bool = False, 
@@ -206,6 +218,10 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
                 )
 
         print(f"Training finished! max_{max_acc_type}_acc={max_acc}")
+        self.imp.add_hparam_records(
+            metrics={f"max_{max_acc_type}_acc": max_acc}
+        )
+        self.close_writer()
         return results
 
     def test(self) -> Dict[str, float]:

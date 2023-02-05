@@ -1,4 +1,5 @@
 from typing import Optional, Callable, Sequence
+from types import SimpleNamespace
 
 import torch.nn as nn
 from torch import optim
@@ -11,7 +12,7 @@ from reunn.implementation import torch_imp
 class SpikingjellyActivationBasedPipelineImp(torch_imp.TorchPipelineImp):
 
     def __init__(
-        self, net: nn.Module, T: int, log_dir: str,
+        self, net: nn.Module, T: int, log_dir: str, hparam: dict,
         criterion: Optional[Callable] = None,
         optimizer: Optional[optim.Optimizer] = None,
         train_loader: Optional[data.DataLoader] = None,
@@ -19,7 +20,7 @@ class SpikingjellyActivationBasedPipelineImp(torch_imp.TorchPipelineImp):
         validation_loader: Optional[data.DataLoader] = None,
     ):
         super().__init__(
-            net, log_dir, criterion, optimizer, 
+            net, log_dir, hparam, criterion, optimizer, 
             train_loader, test_loader, validation_loader
         )
         self.T = T

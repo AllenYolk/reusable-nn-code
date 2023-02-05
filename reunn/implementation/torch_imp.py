@@ -15,14 +15,14 @@ from reunn.implementation import base_imp
 class TorchPipelineImp(base_imp.BasePipelineImp):
 
     def __init__(
-        self, net: nn.Module, log_dir: str,
+        self, net: nn.Module, log_dir: str, hparam: dict,
         criterion: Optional[Callable] = None,
         optimizer: Optional[optim.Optimizer] = None,
         train_loader: Optional[data.DataLoader] = None, 
         test_loader: Optional[data.DataLoader] = None,
         validation_loader: Optional[data.DataLoader] = None,
     ):
-        super().__init__(log_dir)
+        super().__init__(log_dir, hparam)
         self.net = net
         self.train_loader = train_loader
         self.test_loader = test_loader
@@ -122,7 +122,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         min_loss_type: Optional[str] = None, max_acc_type: Optional[str] = None,
         trained_epoch: Optional[int] = None,
     ):
-        chk = {"state_dict": self.net.state_dict()}
+        chk = {"state_dict": self.net.state_dict(), "hparam": self.hparam}
         if validation_loss is not None:
             chk["validation_loss"] = validation_loss
         if validation_acc is not None:
@@ -146,6 +146,8 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         chk = torch.load(dir)
         if "state_dict" in chk:
             self.net.load_state_dict(chk["state_dict"])
+        if "hparam" in chk:
+            self.hparam = chk["hparam"]
         return chk
 
     def add_runtime_records(self, main_tag, kv, idx):
@@ -153,8 +155,14 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             self.writer = tensorboard.SummaryWriter(self.log_dir)
         self.writer.add_scalars(main_tag, kv, idx)
 
-    def clear_runtime_records(self):
+    def add_hparam_records(self, metrics):
+        if self.writer is None:
+            self.writer = tensorboard.SummaryWriter(self.log_dir)
+        self.writer.add_hparams(self.hparam, metrics)
+
+    def close_writer(self):
         if self.writer is not None:
+            self.writer.flush()
             self.writer.close()
             self.writer = None
 

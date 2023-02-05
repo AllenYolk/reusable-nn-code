@@ -12,7 +12,7 @@ from spikingjelly.activation_based import functional
 import reunn
 
 
-def train_test(data_dir, log_dir, epoch, silent):
+def train_test(data_dir, log_dir, epochs, silent):
     train_loader = data.DataLoader(
         datasets.FashionMNIST(
             root=data_dir, train=True, 
@@ -37,13 +37,13 @@ def train_test(data_dir, log_dir, epoch, silent):
         nn.Linear(128, 10),
     )
     p = reunn.SupervisedClassificationTaskPipeline(
-        backend="torch", net=net, log_dir=log_dir,
+        backend="torch", net=net, log_dir=log_dir, hparam={"epochs": epochs},
         criterion=nn.CrossEntropyLoss(),
         optimizer=optim.Adam(params=net.parameters(),lr=1e-4),
         train_loader=train_loader, validation_loader=validation_loader
     )
     p.train(
-        epochs=epoch, validation=True, rec_best_checkpoint=True, 
+        epochs=epochs, validation=True, rec_best_checkpoint=True, 
         rec_latest_checkpoint=True, rec_runtime_msg=True, silent=silent
     )
 
@@ -66,7 +66,7 @@ def load_test_test(data_dir, log_dir):
         nn.Linear(128, 10),
     )
     p = reunn.SupervisedClassificationTaskPipeline(
-        backend="torch", net=net, log_dir=log_dir,
+        backend="torch", net=net, log_dir=log_dir, hparam=None,
         criterion=nn.CrossEntropyLoss(),
         test_loader=test_loader
     )
@@ -90,7 +90,7 @@ def stats_test():
     s.print_summary()
 
 
-def spikingjelly_test(data_dir, log_dir, epoch, T, silent):
+def spikingjelly_test(data_dir, log_dir, epochs, T, silent):
     net = nn.Sequential(
         layer.Flatten(),
         layer.Linear(784, 512),
@@ -110,23 +110,24 @@ def spikingjelly_test(data_dir, log_dir, epoch, T, silent):
             root=data_dir, train=True, 
             download=True, transform=transforms.ToTensor(),
         ),
-        batch_size=32, shuffle=True
+        batch_size=64, shuffle=True
     )
     validation_loader = data.DataLoader(
         datasets.MNIST(
             root=data_dir, train=False, 
             download=True, transform=transforms.ToTensor(),
         ),
-        batch_size=32, shuffle=True
+        batch_size=128, shuffle=True
     )
     p = reunn.SupervisedClassificationTaskPipeline(
-        backend="spikingjelly", net=net, log_dir=log_dir, T=T,
+        backend="spikingjelly", net=net, log_dir=log_dir, T=T, 
+        hparam={"epochs": epochs, "T": T},
         criterion=nn.CrossEntropyLoss(),
         optimizer=optim.Adam(params=net.parameters(),lr=1e-4),
         train_loader=train_loader, validation_loader=validation_loader
     )
     p.train(
-        epochs=epoch, validation=True, rec_best_checkpoint=True, 
+        epochs=epochs, validation=True, rec_best_checkpoint=True, 
         rec_latest_checkpoint=True, rec_runtime_msg=True, silent=silent
     )
 

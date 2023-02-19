@@ -11,7 +11,7 @@ from reunn.implementation import torch_imp
 class SpikingjellyActivationBasedPipelineImp(torch_imp.TorchPipelineImp):
 
     def __init__(
-        self, net: nn.Module, T: int, log_dir: str, hparam: dict,
+        self, net: nn.Module, step_mode: str, log_dir: str, hparam: dict, 
         criterion: Optional[Callable] = None,
         optimizer: Optional[optim.Optimizer] = None,
         train_loader: Optional[data.DataLoader] = None,
@@ -22,16 +22,10 @@ class SpikingjellyActivationBasedPipelineImp(torch_imp.TorchPipelineImp):
             net, log_dir, hparam, criterion, optimizer, 
             train_loader, test_loader, validation_loader
         )
-        self.T = T
+        self.step_mode = step_mode
 
-    def data_label_process(self, data, labels, mode):
-        functional.reset_net(self.net)
-        n_dim_data = len(data.shape)
-        data = data.repeat(self.T, *[1 for _ in range(n_dim_data)])
-        return data, labels
-
-    def pred_process(self, pred, mode):
-        return pred.sum(dim = 0)
+    def after_batch_process(self, running_mode):
+        return functional.reset_net(self.net)
 
 
 class SpikingjellyStatsImp(torch_imp.TorchStatsImp):

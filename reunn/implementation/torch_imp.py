@@ -37,14 +37,17 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             labels = labels.argmax(dim=1)
         return (pred.argmax(dim=1) == labels).sum().item()
 
-    def data_label_process(self, data, labels, mode):
+    def data_label_process(self, data, labels, running_mode):
         return data, labels
 
-    def pred_process(self, pred, mode):
+    def pred_process(self, pred, running_mode):
         return pred
 
-    def loss_process(self, loss, mode):
+    def loss_process(self, loss, running_mode):
         return loss
+
+    def after_batch_process(self, running_mode):
+        pass
 
     def train_step(
         self, validation: bool = False, compute_acc: bool = False, 
@@ -66,6 +69,8 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
+            self.after_batch_process("train")
 
             train_loss += loss.item() * labels.shape[0]
             train_sample_cnt += labels.shape[0]
@@ -97,6 +102,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
                 pred = self.pred_process(pred, mode)
                 loss = self.criterion(pred, labels)
                 loss = self.loss_process(loss, mode)
+                self.after_batch_process(mode)
 
                 accumulate_loss += loss.item() * labels.shape[0]
                 accumulate_sample_cnt += labels.shape[0]

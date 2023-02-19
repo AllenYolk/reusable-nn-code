@@ -91,17 +91,33 @@ def stats_test():
 
 
 def spikingjelly_test(data_dir, log_dir, epochs, T, silent):
+    class multi_step_data_extend(nn.Module):
+        def __init__(self, T):
+            super().__init__()
+            self.T = T
+        def forward(self, x):
+            l = len(x.shape)
+            return x.repeat(T, *[1 for i in range(l)])
+
+    class multi_step_pred_sum(nn.Module):
+        def __init__(self):
+            super().__init__()
+        def forward(self, x):
+            return x.sum(dim=0)
+
     net = nn.Sequential(
+        multi_step_data_extend(T),
         layer.Flatten(),
         layer.Linear(784, 512),
         neuron.IFNode(),
         layer.Linear(512, 128),
         neuron.IFNode(),
         layer.Linear(128, 10),
+        multi_step_pred_sum()
     )
     functional.set_step_mode(net, "m")
     s = reunn.NetStats(
-        net=net, input_shape=[T, 1, 1, 28, 28], backend="spikingjelly"
+        net=net, input_shape=[1, 1, 28, 28], backend="spikingjelly"
     )
     s.print_summary()
 
@@ -120,15 +136,15 @@ def spikingjelly_test(data_dir, log_dir, epochs, T, silent):
         batch_size=128, shuffle=True
     )
     p = reunn.SupervisedClassificationTaskPipeline(
-        backend="spikingjelly", net=net, log_dir=log_dir, T=T, 
+        backend="spikingjelly", net=net, step_mode="m", log_dir=log_dir,
         hparam={"epochs": epochs, "T": T},
         criterion=nn.CrossEntropyLoss(),
         optimizer=optim.Adam(params=net.parameters(),lr=1e-4),
         train_loader=train_loader, validation_loader=validation_loader
     )
     p.train(
-        epochs=epochs, validation=True, rec_best_checkpoint=True, 
-        rec_latest_checkpoint=True, rec_runtime_msg=True, silent=silent
+        epochs=epochs, validation=True, rec_best_checkpoint=False, 
+        rec_latest_checkpoint=False, rec_runtime_msg=False, silent=silent
     )
 
 

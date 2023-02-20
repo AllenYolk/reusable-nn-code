@@ -16,6 +16,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
 
     def __init__(
         self, net: nn.Module, log_dir: str, hparam: dict,
+        device: str = "cpu",
         criterion: Optional[Callable] = None,
         optimizer: Optional[optim.Optimizer] = None,
         train_loader: Optional[data.DataLoader] = None, 
@@ -23,7 +24,8 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         validation_loader: Optional[data.DataLoader] = None,
     ):
         super().__init__(log_dir, hparam)
-        self.net = net
+        self.device = device
+        self.net = net.to(device=device)
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.validation_loader = validation_loader
@@ -38,7 +40,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         return (pred.argmax(dim=1) == labels).sum().item()
 
     def data_label_process(self, data, labels, running_mode):
-        return data, labels
+        return data.to(device=self.device), labels.to(device=self.device)
 
     def pred_process(self, pred, running_mode):
         return pred

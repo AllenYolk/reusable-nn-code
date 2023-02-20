@@ -12,7 +12,7 @@ from spikingjelly.activation_based import functional
 import reunn
 
 
-def train_test(data_dir, log_dir, epochs, silent):
+def train_test(data_dir, log_dir, epochs, silent, device):
     train_loader = data.DataLoader(
         datasets.FashionMNIST(
             root=data_dir, train=True, 
@@ -38,6 +38,7 @@ def train_test(data_dir, log_dir, epochs, silent):
     )
     p = reunn.SupervisedClassificationTaskPipeline(
         backend="torch", net=net, log_dir=log_dir, hparam={"epochs": epochs},
+        device=device,
         criterion=nn.CrossEntropyLoss(),
         optimizer=optim.Adam(params=net.parameters(),lr=1e-4),
         train_loader=train_loader, validation_loader=validation_loader
@@ -48,7 +49,7 @@ def train_test(data_dir, log_dir, epochs, silent):
     )
 
 
-def load_test_test(data_dir, log_dir):
+def load_test_test(data_dir, log_dir, device):
     test_loader = data.DataLoader(
         datasets.FashionMNIST(
             root=data_dir, train=False,
@@ -67,6 +68,7 @@ def load_test_test(data_dir, log_dir):
     )
     p = reunn.SupervisedClassificationTaskPipeline(
         backend="torch", net=net, log_dir=log_dir, hparam=None,
+        device=device,
         criterion=nn.CrossEntropyLoss(),
         test_loader=test_loader
     )
@@ -90,7 +92,7 @@ def stats_test():
     s.print_summary()
 
 
-def spikingjelly_test(data_dir, log_dir, epochs, T, silent):
+def spikingjelly_test(data_dir, log_dir, epochs, T, silent, device):
     class multi_step_data_extend(nn.Module):
         def __init__(self, T):
             super().__init__()
@@ -116,10 +118,6 @@ def spikingjelly_test(data_dir, log_dir, epochs, T, silent):
         multi_step_pred_sum()
     )
     functional.set_step_mode(net, "m")
-    s = reunn.NetStats(
-        net=net, input_shape=[1, 1, 28, 28], backend="spikingjelly"
-    )
-    s.print_summary()
 
     train_loader = data.DataLoader(
         datasets.MNIST(
@@ -138,6 +136,7 @@ def spikingjelly_test(data_dir, log_dir, epochs, T, silent):
     p = reunn.SupervisedClassificationTaskPipeline(
         backend="spikingjelly", net=net, step_mode="m", log_dir=log_dir,
         hparam={"epochs": epochs, "T": T},
+        device=device,
         criterion=nn.CrossEntropyLoss(),
         optimizer=optim.Adam(params=net.parameters(),lr=1e-4),
         train_loader=train_loader, validation_loader=validation_loader
@@ -156,15 +155,19 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--silent", action="store_true")
     parser.add_argument("-e", "--epochs", type=int, default=5)
     parser.add_argument("-T", type=int, default=4)
+    parser.add_argument("-d", "--device", type=str, default="cpu")
     args = parser.parse_args()
 
     if args.mode == "train":
-        train_test(args.data_dir, args.log_dir, args.epochs, args.silent)
+        train_test(
+            args.data_dir, args.log_dir, args.epochs, args.silent, args.device
+        )
     elif args.mode == "load":
-        load_test_test(args.data_dir, args.log_dir)
+        load_test_test(args.data_dir, args.log_dir, args.device)
     elif args.mode == "stats":
         stats_test()
     elif args.mode == "spikingjelly":
         spikingjelly_test(
             args.data_dir, args.log_dir, args.epochs, args.T, args.silent,
+            args.device
         )

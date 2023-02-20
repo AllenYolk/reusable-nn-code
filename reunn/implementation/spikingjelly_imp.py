@@ -12,6 +12,7 @@ class SpikingjellyActivationBasedPipelineImp(torch_imp.TorchPipelineImp):
 
     def __init__(
         self, net: nn.Module, step_mode: str, log_dir: str, hparam: dict, 
+        device: str = "cpu",
         criterion: Optional[Callable] = None,
         optimizer: Optional[optim.Optimizer] = None,
         train_loader: Optional[data.DataLoader] = None,
@@ -19,7 +20,7 @@ class SpikingjellyActivationBasedPipelineImp(torch_imp.TorchPipelineImp):
         validation_loader: Optional[data.DataLoader] = None,
     ):
         super().__init__(
-            net, log_dir, hparam, criterion, optimizer, 
+            net, log_dir, hparam, device, criterion, optimizer, 
             train_loader, test_loader, validation_loader
         )
         self.step_mode = step_mode

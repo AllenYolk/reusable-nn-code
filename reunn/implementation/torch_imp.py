@@ -19,7 +19,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         device: str = "cpu",
         criterion: Optional[Callable] = None,
         optimizer: Optional[optim.Optimizer] = None,
-        lr_scheduler: Optional[optim._LRScheduler] = None,
+        lr_scheduler=None,
         train_loader: Optional[data.DataLoader] = None, 
         test_loader: Optional[data.DataLoader] = None,
         validation_loader: Optional[data.DataLoader] = None,

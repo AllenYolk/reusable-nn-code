@@ -19,6 +19,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         device: str = "cpu",
         criterion: Optional[Callable] = None,
         optimizer: Optional[optim.Optimizer] = None,
+        lr_scheduler: Optional[optim._LRScheduler] = None,
         train_loader: Optional[data.DataLoader] = None, 
         test_loader: Optional[data.DataLoader] = None,
         validation_loader: Optional[data.DataLoader] = None,
@@ -30,6 +31,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         self.test_loader = test_loader
         self.validation_loader = validation_loader
         self.optimizer = optimizer
+        self.lr_scheduler = lr_scheduler
         self.criterion = criterion
         self.writer = None
 
@@ -78,6 +80,9 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
             train_sample_cnt += labels.shape[0]
             if compute_acc:
                 train_acc += self.acc_cnt(pred, labels)
+
+        if self.lr_scheduler is not None:
+            self.lr_scheduler.step()
 
         train_loss /= train_sample_cnt
         if compute_acc:
@@ -130,7 +135,11 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         min_loss_type: Optional[str] = None, max_acc_type: Optional[str] = None,
         trained_epoch: Optional[int] = None,
     ):
-        chk = {"state_dict": self.net.state_dict(), "hparam": self.hparam}
+        chk = {"net_state_dict": self.net.state_dict(), "hparam": self.hparam}
+        if self.optimizer is not None:
+            chk["optimizer_state_dict"] = self.optimizer.state_dict()
+        if self.lr_scheduler is not None:
+            chk["lr_scheduler_state_dict"] = self.lr_scheduler.state_dict()
         if validation_loss is not None:
             chk["validation_loss"] = validation_loss
         if validation_acc is not None:
@@ -152,8 +161,12 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
     def load_pipeline_state(self, file: str):
         dir = os.path.join(self.log_dir, file)
         chk = torch.load(dir)
-        if "state_dict" in chk:
-            self.net.load_state_dict(chk["state_dict"])
+        if "net_state_dict" in chk:
+            self.net.load_state_dict(chk["net_state_dict"])
+        if ("optimizer_state_dict" in chk) and (self.optimizer is not None):
+            self.optimizer.load_state_dict(chk["optimizer_state_dict"])
+        if ("lr_scheduler_state_dict" in chk) and (self.lr_scheduler is not None):
+            self.lr_scheduler.load_state_dict(chk["lr_scheduler_state_dict"])
         if "hparam" in chk:
             self.hparam = chk["hparam"]
         return chk

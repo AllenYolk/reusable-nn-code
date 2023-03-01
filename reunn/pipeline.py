@@ -21,8 +21,11 @@ class TaskPipeline(abc.ABC):
 
     def load_pipeline_state(self, file: str):
         chk = self.imp.load_pipeline_state(file=file)
+        exclude_k = [
+            "net_state_dict", "optimizer_state_dict", "lr_scheduler_state_dict"
+        ]
         for k, v in chk.items():
-            if k in ["state_dict"]:
+            if k in exclude_k:
                 continue
             print(f"{k}={v}")
         return chk

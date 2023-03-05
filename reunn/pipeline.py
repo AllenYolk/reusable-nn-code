@@ -64,6 +64,7 @@ class SupervisedTaskPipeline(TaskPipeline):
         silent: bool = False,
     ) -> Dict[str, List[float]]:
         min_loss = float("inf")
+        min_loss_type = "validation" if validation else "train"
         results = defaultdict(list)
 
         for epoch in range(epochs):
@@ -89,7 +90,6 @@ class SupervisedTaskPipeline(TaskPipeline):
                     kv["validation_loss"] = validation_loss
                 self.add_runtime_records(main_tag="loss", kv=kv, idx=epoch)
 
-            min_loss_type = "validation" if validation else "train"
             if validation:
                 if validation_loss < min_loss:
                     min_loss = validation_loss
@@ -153,6 +153,7 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
         silent: bool = False
     ) -> Dict[str, List[float]]:
         max_acc = -1.
+        max_acc_type = "validation" if validation else "train"
         results = defaultdict(list)
 
         for epoch in range(epochs):
@@ -189,7 +190,6 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
                 self.add_runtime_records(main_tag="loss", kv=kv_loss, idx=epoch)
                 self.add_runtime_records(main_tag="acc", kv=kv_acc, idx=epoch)
 
-            max_acc_type = "validation" if validation else "train"
             if validation:
                 if validation_acc > max_acc:
                     max_acc = validation_acc

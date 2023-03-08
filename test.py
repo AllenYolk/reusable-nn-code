@@ -150,7 +150,7 @@ def spikingjelly_test(data_dir, log_dir, epochs, T, silent, device):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, default="../datasets/")
-    parser.add_argument("--log_dir", type=str, default="../log_dir")
+    parser.add_argument("--log_dir", type=str, default="../logs")
     parser.add_argument("-m", "--mode", type=str, default="spikingjelly")
     parser.add_argument("-s", "--silent", action="store_true")
     parser.add_argument("-e", "--epochs", type=int, default=5)

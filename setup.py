@@ -9,7 +9,7 @@ with open("./README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="reunn",
-    version="0.1.0",
+    version="0.2.0",
     author=(
         "AllenYolk (Yifan Huang, from Peking University); "
         "RadonTRD (Ruidong Tang, from Donghua University)"

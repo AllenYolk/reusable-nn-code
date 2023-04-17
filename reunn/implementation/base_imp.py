@@ -5,7 +5,7 @@ from typing import Sequence
 
 class BasePipelineImp(abc.ABC):
 
-    def __init__(self, log_dir, hparam):
+    def __init__(self, log_dir: str, hparam: dict):
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
         self.log_dir = log_dir

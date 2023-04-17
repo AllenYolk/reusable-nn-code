@@ -135,11 +135,14 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         min_loss_type: Optional[str] = None, max_acc_type: Optional[str] = None,
         trained_epoch: Optional[int] = None,
     ):
+        # save pipeline states
         chk = {"net_state_dict": self.net.state_dict(), "hparam": self.hparam}
         if self.optimizer is not None:
             chk["optimizer_state_dict"] = self.optimizer.state_dict()
         if self.lr_scheduler is not None:
             chk["lr_scheduler_state_dict"] = self.lr_scheduler.state_dict()
+
+        # save other runtime information
         if validation_loss is not None:
             chk["validation_loss"] = validation_loss
         if validation_acc is not None:
@@ -158,7 +161,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
         dir = os.path.join(self.log_dir, file)
         torch.save(chk, dir)
 
-    def load_pipeline_state(self, file: str):
+    def load_pipeline_state(self, file: str) -> dict:
         dir = os.path.join(self.log_dir, file)
         chk = torch.load(dir)
         if "net_state_dict" in chk:

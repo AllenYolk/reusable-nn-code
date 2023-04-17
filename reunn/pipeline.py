@@ -41,20 +41,25 @@ class SupervisedTaskPipeline(TaskPipeline):
 
     def __init__(
         self, net, log_dir: str, hparam: dict, backend: str = "torch", 
-        **kwargs
+        self_defined_imp_class = None, **kwargs
     ):
-        if backend == "torch":
-            from reunn.implementation import torch_imp
-            imp = torch_imp.TorchPipelineImp(
-                net=net, log_dir=log_dir, hparam=hparam, **kwargs
-            )
-        elif backend == "spikingjelly":
-            from reunn.implementation import spikingjelly_imp
-            imp = spikingjelly_imp.SpikingjellyActivationBasedPipelineImp(
-                net=net, log_dir=log_dir, hparam=hparam, **kwargs
-            )
+        if self_defined_imp_class is None:
+            if backend == "torch":
+                from reunn.implementation import torch_imp
+                imp = torch_imp.TorchPipelineImp(
+                    net=net, log_dir=log_dir, hparam=hparam, **kwargs
+                )
+            elif backend == "spikingjelly":
+                from reunn.implementation import spikingjelly_imp
+                imp = spikingjelly_imp.SpikingjellyActivationBasedPipelineImp(
+                    net=net, log_dir=log_dir, hparam=hparam, **kwargs
+                )
+            else:
+                raise ValueError(f"{backend} backend not supported!")
         else:
-            raise ValueError(f"{backend} backend not supported!")
+            imp = self_defined_imp_class(
+                net=net, log_dir=log_dir, hparam=hparam, **kwargs
+            )
         super().__init__(imp)
 
     def train(
@@ -142,9 +147,11 @@ class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
 
     def __init__(
         self, net, log_dir: str, hparam: dict, backend: str = "torch", 
-        **kwargs
+        self_defined_imp_class = None, **kwargs
     ):
-        super().__init__(net, log_dir, hparam, backend, **kwargs)
+        super().__init__(
+            net, log_dir, hparam, backend, self_defined_imp_class, **kwargs
+        )
 
     def train(
         self, epochs: int, validation: bool = False, 

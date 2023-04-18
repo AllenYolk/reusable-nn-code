@@ -23,3 +23,4 @@ pip install .
 * [x] Add [`spikingjelly`](https://github.com/fangwei123456/spikingjelly) implementation (for SNN task pipelines and network statistics).
 * [x] Add hyperparameter to task pipelines.
 * [x] Close the summary writer when destructing the task pipeline.
+* [x] Add support for self-defined implementation.

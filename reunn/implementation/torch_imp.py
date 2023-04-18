@@ -163,7 +163,7 @@ class TorchPipelineImp(base_imp.BasePipelineImp):
 
     def load_pipeline_state(self, file: str) -> dict:
         dir = os.path.join(self.log_dir, file)
-        chk = torch.load(dir)
+        chk = torch.load(dir, map_location=self.device)
         if "net_state_dict" in chk:
             self.net.load_state_dict(chk["net_state_dict"])
         if ("optimizer_state_dict" in chk) and (self.optimizer is not None):

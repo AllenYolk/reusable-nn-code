@@ -24,3 +24,10 @@ pip install .
 * [x] Add hyperparameter to task pipelines.
 * [x] Close the summary writer when destructing the task pipeline.
 * [x] Add support for self-defined implementation.
+
+## Warning
+
+This project is no longer actively maintained.
+
+As of 2023.06.30, this project will no longer receive updates or fixes.
+We recommend that users find alternative solutions for their needs!

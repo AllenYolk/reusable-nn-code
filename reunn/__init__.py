@@ -1,4 +1,4 @@
-from .pipeline import (
+from .supvised_pipeline import (
     SupervisedRegressionTaskPipeline,
     SupervisedClassificationTaskPipeline,
 )

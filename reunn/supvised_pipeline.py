@@ -5,7 +5,7 @@ from collections import defaultdict
 from .implementation.base_imp import BasePipelineImp
 
 
-class TaskPipeline(abc.ABC):
+class SupervisedTaskPipeline(abc.ABC):
 
     def __init__(self, imp):
         self.imp = imp
@@ -39,7 +39,7 @@ class TaskPipeline(abc.ABC):
         self.imp.add_hparam_records(metrics)
 
 
-class SupervisedRegressionTaskPipeline(TaskPipeline):
+class SupervisedRegressionTaskPipeline(SupervisedTaskPipeline):
 
     def __init__(
         self, net, log_dir: str, hparam: dict, backend: str = "torch", 
@@ -146,7 +146,7 @@ class SupervisedRegressionTaskPipeline(TaskPipeline):
         return {"test_loss": test_loss}
 
 
-class SupervisedClassificationTaskPipeline(TaskPipeline):
+class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
 
     def __init__(
         self, net, log_dir: str, hparam: dict, backend: str = "torch", 

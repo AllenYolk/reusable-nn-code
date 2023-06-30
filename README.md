@@ -2,11 +2,24 @@
 
 The Python package `reunn` contains **REU**sable code for defining, training and testing **N**eural **N**etworks. Facilitate your coding using object-oriented programing!
 
+`TaskPipeline` in this package is particularly suitable for writing unit tests or solving simple ML tasks. Now, it can deal with:
+
+* supervised **regression** tasks: `SupervisedClassificationTaskPipeline`
+* supervised **classification** tasks: `SupervisedClassificationTaskPipeline`.
+
+However, for complex tasks, we suggest that you should write your pipeline manually!
+
+`NetStats` provides statistical information about your neural network, like:
+
+* the number of multiply-accumulate operations (MACs) required during computation
+* the total number of parameters in the network
+
 ## Installation
 
 ### Install from Source Code
 
 From [GitHub](https://github.com/AllenYolk/reusable-nn-code):
+
 ```shell
 git clone https://github.com/AllenYolk/reusable-nn-code.git
 cd reusable-nn-code
@@ -14,6 +27,7 @@ pip install .
 ```
 
 ## TODO:
+
 * [x] Add `setup.py` and write the installation guide.
 * [x] Implement `TaskPipeline`. Use the "Bridge" design pattern here.
 * [x] Implement `NetStats`. Use the "Bridge" design pattern here. Use `fvcore` to implement pytorch-based `NetStats`.
@@ -24,10 +38,3 @@ pip install .
 * [x] Add hyperparameter to task pipelines.
 * [x] Close the summary writer when destructing the task pipeline.
 * [x] Add support for self-defined implementation.
-
-## Warning
-
-This project is no longer actively maintained.
-
-As of 2023.06.30, this project will no longer receive updates or fixes.
-We recommend that users find alternative solutions for their needs!

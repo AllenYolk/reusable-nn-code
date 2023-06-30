@@ -2,7 +2,7 @@ import abc
 from typing import Dict, List
 from collections import defaultdict
 
-from implementation.base_imp import BasePipelineImp
+from .implementation.base_imp import BasePipelineImp
 
 
 class TaskPipeline(abc.ABC):

@@ -2,6 +2,8 @@ import abc
 from typing import Dict, List
 from collections import defaultdict
 
+from implementation.base_imp import BasePipelineImp
+
 
 class TaskPipeline(abc.ABC):
 
@@ -37,13 +39,13 @@ class TaskPipeline(abc.ABC):
         self.imp.add_hparam_records(metrics)
 
 
-class SupervisedTaskPipeline(TaskPipeline):
+class SupervisedRegressionTaskPipeline(TaskPipeline):
 
     def __init__(
         self, net, log_dir: str, hparam: dict, backend: str = "torch", 
-        self_defined_imp_class = None, **kwargs
+        **kwargs
     ):
-        if self_defined_imp_class is None:
+        if isinstance(backend, str):
             if backend == "torch":
                 from reunn.implementation import torch_imp
                 imp = torch_imp.TorchPipelineImp(
@@ -56,10 +58,11 @@ class SupervisedTaskPipeline(TaskPipeline):
                 )
             else:
                 raise ValueError(f"{backend} backend not supported!")
-        else:
-            imp = self_defined_imp_class(
+        elif isinstance(backend, BasePipelineImp):
+            imp = backend(
                 net=net, log_dir=log_dir, hparam=hparam, **kwargs
             )
+
         super().__init__(imp)
 
     def train(
@@ -143,15 +146,31 @@ class SupervisedTaskPipeline(TaskPipeline):
         return {"test_loss": test_loss}
 
 
-class SupervisedClassificationTaskPipeline(SupervisedTaskPipeline):
+class SupervisedClassificationTaskPipeline(TaskPipeline):
 
     def __init__(
         self, net, log_dir: str, hparam: dict, backend: str = "torch", 
-        self_defined_imp_class = None, **kwargs
+        **kwargs
     ):
-        super().__init__(
-            net, log_dir, hparam, backend, self_defined_imp_class, **kwargs
-        )
+        if isinstance(backend, str):
+            if backend == "torch":
+                from reunn.implementation import torch_imp
+                imp = torch_imp.TorchPipelineImp(
+                    net=net, log_dir=log_dir, hparam=hparam, **kwargs
+                )
+            elif backend == "spikingjelly":
+                from reunn.implementation import spikingjelly_imp
+                imp = spikingjelly_imp.SpikingjellyActivationBasedPipelineImp(
+                    net=net, log_dir=log_dir, hparam=hparam, **kwargs
+                )
+            else:
+                raise ValueError(f"{backend} backend not supported!")
+        elif isinstance(backend, BasePipelineImp):
+            imp = backend(
+                net=net, log_dir=log_dir, hparam=hparam, **kwargs
+            )
+
+        super().__init__(imp)
 
     def train(
         self, epochs: int, validation: bool = False, 

@@ -1,5 +1,5 @@
 from .pipeline import (
-    SupervisedTaskPipeline,
+    SupervisedRegressionTaskPipeline,
     SupervisedClassificationTaskPipeline,
 )
 from .stats import NetStats

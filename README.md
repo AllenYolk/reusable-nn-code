@@ -1,6 +1,7 @@
 # reusable-nn-code
 
 **Deprecated**: This repository will ⚠️ no longer be updated or maintained⚠️, but the existing contents will remain available!
+We strongly recommend you to use official high-level interfaces, like [pytorch-ignite](https://github.com/pytorch/ignite).
 
 The Python package `reunn` contains **REU**sable code for defining, training and testing **N**eural **N**etworks. Facilitate your coding using object-oriented programing!
 

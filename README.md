@@ -1,5 +1,7 @@
 # reusable-nn-code
 
+**Deprecated**: This repository will ⚠️ no longer be updated or maintained⚠️, but the existing contents will remain available!
+
 The Python package `reunn` contains **REU**sable code for defining, training and testing **N**eural **N**etworks. Facilitate your coding using object-oriented programing!
 
 `TaskPipeline` in this package is particularly suitable for writing unit tests or solving simple ML tasks. Now, it can deal with:
